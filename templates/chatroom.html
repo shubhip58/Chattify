@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💬 Chat with {{ friend.name }} | Chattify</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+
+  body {
+    display: flex;
+    height: 100vh;
+    background: #0d1117;
+    color: #e6e6e6;
+    overflow: hidden;
+  }
+
+  /* Chat Panel */
+  #chat-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #161b22;
+    border-left: 2px solid #1e3a8a;
+  }
+
+  /* Header */
+  .chat-header {
+    padding: 18px 25px;
+    background: linear-gradient(135deg, #0b2545, #1e3a8a);
+    border-bottom: 1px solid #2c2f36;
+    font-weight: 600;
+    font-size: 18px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .chat-header span {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+
+  /* Chat Container */
+  .chat-container {
+    flex: 1;
+    padding: 20px 25px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Messages */
+  .message {
+    max-width: 65%;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border-radius: 20px;
+    font-size: 15px;
+    word-wrap: break-word;
+    transition: 0.3s ease;
+  }
+
+  .message.self {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff;
+    border-bottom-right-radius: 5px;
+  }
+
+  .message.other {
+    align-self: flex-start;
+    background: #1f2937;
+    color: #e5e7eb;
+    border: 1px solid #374151;
+    border-bottom-left-radius: 5px;
+  }
+
+  /* Input Area */
+  .input-container {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    background: #1f2937;
+    border-top: 1px solid #2c2f36;
+  }
+
+  .input-container input {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 25px;
+    border: 1px solid #374151;
+    background: #111827;
+    color: #fff;
+    outline: none;
+    font-size: 14px;
+    transition: 0.3s;
+  }
+
+  .input-container input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 5px #2563eb;
+  }
+
+  .input-container button {
+    margin-left: 10px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .input-container button:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2d2f38;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
+
+  /* Fade animation */
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+
+  .message {
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .chat-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+      font-size: 16px;
+    }
+    .message {
+      max-width: 80%;
+      font-size: 14px;
+    }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+
+<div id="chat-panel">
+  <div class="chat-header">
+    💬 Chat with {{ friend.name }}
+    <span>@{{ friend.username }}</span>
+  </div>
+
+  <div class="chat-container" id="chat-container"></div>
+
+  <div class="input-container">
+    <input type="text" id="message-input" placeholder="Type a message... ✍️">
+    <button id="send-btn">Send 🚀</button>
+  </div>
+</div>
+
+<script>
+const socket = io();
+let room = [{{ user_id }}, {{ friend.id }}].sort().join('_');
+const chatContainer = document.getElementById('chat-container');
+const input = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
+
+// Load message history
+(async()=>{
+  const res = await fetch(`/messages/{{ friend.id }}`);
+  const messages = await res.json();
+  messages.forEach(m=>{
+    const div = document.createElement('div');
+    div.classList.add('message', m.sender_id == {{ user_id }} ? 'self':'other');
+    div.textContent = m.content;
+    chatContainer.appendChild(div);
+  });
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+})();
+
+socket.emit('join',{room:room,username:"{{ username }}"});
+
+// Send message
+sendBtn.addEventListener('click',()=>{
+  const msg=input.value.trim();
+  if(!msg) return;
+  socket.emit('send_message',{room:room,msg:msg,sender_id:{{ user_id }},receiver_id:{{ friend.id }},username:"{{ username }}"});
+  const div=document.createElement('div');
+  div.classList.add('message','self');
+  div.textContent=msg;
+  chatContainer.appendChild(div);
+  chatContainer.scrollTop=chatContainer.scrollHeight;
+  input.value='';
+});
+
+// Receive message
+socket.on('receive_message',data=>{
+  if(data.sender_id!= {{ user_id }}){
+    const div=document.createElement('div');
+    div.classList.add('message','other');
+    div.textContent=data.msg;
+    chatContainer.appendChild(div);
+    chatContainer.scrollTop=chatContainer.scrollHeight;
+  }
+});
+</script>
+</body>
+</html>

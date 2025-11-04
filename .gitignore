@@ -1,0 +1,20 @@
+# Ignore Python environment and system files
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore VSCode and IDE settings
+.vscode/
+.idea/
+
+# Ignore local system files
+AppData/
+*.log
+
+# Ignore node_modules (if any)
+node_modules/
+
+# Ignore cache
+*.cache
+*.lock

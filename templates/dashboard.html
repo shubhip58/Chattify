@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>💬 Chattify Dashboard</title>
+  <style>
+    /* Base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: #0d1117;
+      color: #e6e6e6;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #0b2545, #1e3a8a);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+    }
+
+    header h1 {
+      font-size: 26px;
+      letter-spacing: 1px;
+    }
+
+    /* Logout Button */
+    .logout-btn {
+      background: #dc2626;
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: #b91c1c;
+      transform: scale(1.05);
+    }
+
+    /* Container */
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 30px;
+    }
+
+    /* Card */
+    .card {
+      background: #161b22;
+      border-radius: 15px;
+      padding: 25px;
+      flex: 1;
+      min-width: 300px;
+      max-width: 360px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 25px rgba(0,0,0,0.6);
+    }
+
+    .card h2 {
+      font-size: 20px;
+      color: #60a5fa;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    /* User row */
+    .user {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #2c2f36;
+    }
+
+    .user span {
+      color: #d1d5db;
+      font-size: 14px;
+    }
+
+    /* Buttons */
+    .user button,
+    .chat-btn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: 0.3s;
+    }
+
+    .add-btn {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .add-btn:hover {
+      background: #1e40af;
+    }
+
+    .add-btn[disabled] {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    .accept-btn {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .accept-btn:hover {
+      background: #15803d;
+    }
+
+    .chat-btn {
+      background: #7c3aed;
+      color: #fff;
+    }
+
+    .chat-btn:hover {
+      background: #5b21b6;
+    }
+
+    /* Empty text */
+    p {
+      text-align: center;
+      color: #9ca3af;
+      margin-top: 10px;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2d2f38;
+      border-radius: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1000px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+      header {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>👋 Welcome, {{ username }} — Chattify Dashboard</h1>
+    <form action="{{ url_for('login') }}" method="post">
+      <button class="logout-btn">🚪 Logout</button>
+    </form>
+  </header>
+
+  <div class="container">
+
+    <!-- Search Users -->
+    <div class="card">
+      <h2>🔍 Search Users</h2>
+      {% for user in users %}
+        <div class="user">
+          <span>{{ user.name }} ({{ user.username }})</span>
+          <form action="{{ url_for('send_request', receiver_id=user.id) }}" method="post">
+            {% if user.id in sent_ids %}
+              <button class="add-btn" disabled>Sent</button>
+            {% else %}
+              <button class="add-btn">Add Friend</button>
+            {% endif %}
+          </form>
+        </div>
+      {% else %}
+        <p>No users found</p>
+      {% endfor %}
+    </div>
+
+    <!-- Friend Requests -->
+    <div class="card">
+      <h2>📩 Friend Requests</h2>
+      {% for user in requests %}
+        <div class="user">
+          <span>{{ user.name }} ({{ user.username }})</span>
+          <form action="{{ url_for('accept_request', sender_id=user.id) }}" method="post">
+            <button class="accept-btn">Accept</button>
+          </form>
+        </div>
+      {% else %}
+        <p>No requests yet</p>
+      {% endfor %}
+    </div>
+
+    <!-- Friends List -->
+    <div class="card">
+      <h2>💙 Friends</h2>
+      {% for user in friends %}
+        <div class="user">
+          <span>{{ user.name }} ({{ user.username }})</span>
+          <a href="{{ url_for('chatroom', friend_id=user.id) }}">
+            <button class="chat-btn">Chat 💬</button>
+          </a>
+        </div>
+      {% else %}
+        <p>No friends yet</p>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>
+
